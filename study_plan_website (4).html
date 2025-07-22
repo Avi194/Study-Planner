@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avinash's Term 1 Study Planner</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0faf6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #a3e4d7;
+      padding: 20px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .day-block {
+      background: #e8f8f5;
+      margin: 20px;
+      border-radius: 15px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    }
+    .day-header {
+      padding: 15px;
+      background: #76d7c4;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .session {
+      padding: 15px;
+      border-top: 1px solid #ccc;
+      position: relative;
+    }
+    .study-how {
+      margin-top: 10px;
+    }
+    .done-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #48c9b0;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #d1f2eb;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>📚 Term 1 Study Plan – Avinash (Std 9)</h1>
+</header>
+<main id="studyPlan"></main>
+<footer>
+  Made for Avinash | Std 9 Term 1 Planner
+</footer>
+<script>
+const startDate = new Date("2025-07-24");
+const endDate = new Date("2025-09-01");
+const studyDays = [2, 4, 6, 0];
+const timeSlots = ["3:30–5:00 PM", "7:30–8:30 PM"];
+const fullPlan = [
+  { subject: "Maths", topics: ["Number Systems", "Polynomials", "Lines and Angles", "Triangles", "Quadrilaterals", "Euclid's Geometry", "Introduction to Trigonometry"] },
+  { subject: "Science", topics: ["Matter in Our Surroundings", "Tissues", "Motion", "Fundamental Unit of Life", "Force and Laws of Motion", "Gravitation"] },
+  { subject: "Social Science", topics: ["India – Size & Location", "Drainage", "Physiographic Division of India", "Goa: Past and Present", "French Revolution", "American War of Independence", "Democracy", "Economics"] },
+  { subject: "English", topics: ["The Fun They Had", "The Sound of Music", "Rain on the Roof", "The Little Girl", "A Truly Beautiful Mind", "Writing", "Grammar"] },
+  { subject: "Hindi", topics: ["ईदगाह", "गिल्लू", "चीफ की दावत", "तिनका और तूफान", "झाँसी की रानी", "संधि", "काल", "विलोम", "निबंध", "पत्र"] },
+  { subject: "Marathi", topics: ["तारा आपल्यात झुंटत", "छत्रीपुराण", "हा देश माझा", "नामदेव", "प्रबळ वाट", "पत्र", "निबंध", "संवाद"] }
+];
+
+const sampleHowTo = [
+  "📖 Read the textbook\n📺 Watch a video\n✍️ Make notes\n🧠 Practice Qs",
+  "📘 Solve workbook\n📌 Draw diagrams\n🎯 Revise key points",
+  "🎧 Listen to summary\n📸 Make a concept sketch\n📝 Attempt writing practice"
+];
+
+const completedSessions = JSON.parse(localStorage.getItem("completedSessions") || "[]");
+const planEl = document.getElementById("studyPlan");
+
+let sessionQueue = [];
+fullPlan.forEach(entry => {
+  entry.topics.forEach(topic => {
+    sessionQueue.push({ subject: entry.subject, topic });
+  });
+});
+
+function formatDate(date) {
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', weekday: 'long' });
+}
+
+function generateSessionId(dateStr, slot, subject, topic) {
+  return `${dateStr}_${slot}_${subject}_${topic}`.replace(/\s+/g, '_');
+}
+
+function generatePlan() {
+  let current = new Date(startDate);
+  while (current <= endDate && sessionQueue.length > 0) {
+    if (studyDays.includes(current.getDay())) {
+      const dateStr = formatDate(current);
+      const block = document.createElement("div");
+      block.className = "day-block";
+
+      const header = document.createElement("div");
+      header.className = "day-header";
+      header.textContent = `📅 ${dateStr}`;
+      header.onclick = () => content.style.display = content.style.display === "none" ? "block" : "none";
+
+      const content = document.createElement("div");
+      content.style.display = "none";
+
+      timeSlots.forEach((slot, i) => {
+        let subject, topic, how;
+        if (i === 1 && current.getDate() % 10 === 0) {
+          subject = "Revision Test";
+          const rev = sessionQueue[Math.floor(Math.random() * sessionQueue.length)];
+          topic = rev.subject + " – Revision";
+          how = "🧠 Revise all notes\n📝 Take timed test\n📊 Check mistakes";
+        } else if (sessionQueue.length) {
+          const task = sessionQueue.shift();
+          subject = task.subject;
+          topic = task.topic;
+          how = sampleHowTo[Math.floor(Math.random() * sampleHowTo.length)];
+        }
+        if (!subject) return;
+        const sessionId = generateSessionId(dateStr, slot, subject, topic);
+        if (completedSessions.includes(sessionId)) return;
+        const session = document.createElement("div");
+        session.className = "session";
+        session.innerHTML = `<h4>⏰ ${slot} – Subject: ${subject} – Topic: ${topic}</h4>
+          <div class="study-how">📌 How to Study:<br>${how.replace(/\n/g, '<br>')}</div>
+          <button class="done-btn">✓ Done</button>`;
+        session.querySelector(".done-btn").onclick = () => {
+          completedSessions.push(sessionId);
+          localStorage.setItem("completedSessions", JSON.stringify(completedSessions));
+          session.remove();
+        };
+        content.appendChild(session);
+      });
+
+      block.appendChild(header);
+      block.appendChild(content);
+      planEl.appendChild(block);
+    }
+    current.setDate(current.getDate() + 1);
+  }
+}
+
+generatePlan();
+</script>
+</body>
+</html>
